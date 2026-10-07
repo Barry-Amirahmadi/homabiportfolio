@@ -49,14 +49,16 @@ window.HOMA_METRICS = (() => {
       { name: 'بیش از ۱۸۰ روز', value: sum(c.ar.filter(x => x.overdue_days > 180), 'balance_toman') },
     ];
     const clients = Object.values(c.ar.reduce((acc, x) => {
-      const row = acc[x.customer_id] ||= { name: customerMap[x.customer_id].name, value: 0, overdue: 0 };
+      const row = acc[x.customer_id] || (acc[x.customer_id] = { name: customerMap[x.customer_id].name, value: 0, overdue: 0 });
       row.value += x.balance_toman;
       if (x.overdue_days > 0) row.overdue += x.balance_toman;
       return acc;
     }, {}));
-    const purchaseRows = D.supply.filter(x => c.ids.has(x[0]) && c.periodIds.has(x[1]));
+    const selectedGroups = new Set(c.projects.map(p => p.group_name));
+    const selectedYears = new Set(c.periods.map(p => p.jalali_year));
+    const purchaseRows = D.supply.filter(x => selectedGroups.has(x[0]) && selectedYears.has(x[1]));
     const supplierRows = Object.values(purchaseRows.reduce((acc, x) => {
-      const row = acc[x[2]] ||= { name: supplierMap[x[2]].name, value: 0, orders: 0, late: 0 };
+      const row = acc[x[2]] || (acc[x[2]] = { name: supplierMap[x[2]].name, value: 0, orders: 0, late: 0 });
       row.value += x[4]; row.orders += x[3]; row.late += x[5];
       return acc;
     }, {}));
@@ -137,7 +139,7 @@ window.HOMA_METRICS = (() => {
         first = ['روند ارزش خرید', chart(labels, [{ name: 'خرید مصالح', values: monthly('purchase_toman'), color: purple }])];
         const cats = Object.values(purchaseRows.reduce((acc, x) => {
           const name = supplierMap[x[2]].category;
-          (acc[name] ||= { name, value: 0 }).value += x[4];
+          (acc[name] || (acc[name] = { name, value: 0 })).value += x[4];
           return acc;
         }, {}));
         second = ['ترکیب خرید به گروه مصالح', bars(top(cats, 10))];
