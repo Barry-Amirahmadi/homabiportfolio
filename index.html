@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>هُما | اتاق تصمیم مدیرعامل</title><link rel="stylesheet" href="style.css"></head>
+<body>
+<div class="ambient a1"></div><div class="ambient a2"></div>
+<aside class="sidebar">
+ <a class="brand" href="#overview"><span class="brand-mark">هـ</span><div><strong>هُما</strong><small>گروه توسعه و ساخت</small></div></a>
+ <div class="workspace"><span class="status-dot"></span><div>اتاق تصمیم مدیرعامل<small>هلدینگ ساختمانی فرضی</small></div></div>
+ <div class="nav-label">نمای مدیریتی</div><nav id="nav"></nav>
+ <div class="sidebar-bottom"><span class="mini-orbit">◈</span><strong>از داده تا تصمیم</strong><p>نمونه‌کار BI & BA<br>داده‌های شبیه‌سازی‌شده</p><a href="CASE-STUDY.html" target="_blank">داستان پروژه و روش تحلیل ↗</a></div>
+</aside>
+<main>
+ <header><div class="breadcrumbs">HOMA / INTELLIGENCE <span>نسخهٔ نمونه‌کار</span></div><div class="header-actions"><span class="live-dot"></span>دادهٔ فرضی، تحلیل قابل بازتولید <button class="icon-btn" id="print" title="چاپ گزارش" aria-label="چاپ گزارش">⎙</button></div></header>
+ <section class="page-heading"><div><div id="eyebrow" class="eyebrow">EXECUTIVE OVERVIEW</div><h1 id="title">نمای کلان هلدینگ</h1><p id="subtitle">پایش رشد و تبدیل آن به ارزش.</p></div><div class="date-badge"><span>تاریخ برش داده</span><strong>۲۹ اسفند ۱۴۰۴</strong></div></section>
+ <section class="filterbar glass" aria-label="فیلترهای داشبورد">
+  <label>دورهٔ عملکرد<select id="period"><option value="1404">سال ۱۴۰۴</option><option value="1403">سال ۱۴۰۳</option><option value="1402">سال ۱۴۰۲</option><option value="all">تمام ۳۶ ماه</option></select></label>
+  <label>گروه کسب‌وکار<select id="group"><option value="all">کل هلدینگ</option></select></label>
+  <label>واحد نمایش<select id="unit"><option value="bn">میلیارد تومان</option><option value="hem">همت</option><option value="usd">میلیون دلار فرضی</option></select></label>
+  <label class="fx-label">تومان / دلار فرضی<input id="fx" type="number" value="90000" min="1000" max="1000000" step="1000" aria-label="نرخ فرضی تبدیل دلار"></label>
+  <button class="export-btn" id="export">خروجی داده ↗</button>
+ </section>
+ <div class="scope-note" id="scope-note">عملکرد: دورهٔ انتخابی · مانده‌ها و وضعیت پروژه‌ها: تاریخ برش داده</div>
+ <div id="content" aria-live="polite"></div>
+ <footer><span>HOMA INTELLIGENCE / 2026</span><span>تمام نام‌ها، داده‌ها و نرخ ارز فرضی‌اند. مبالغ پایه در دیتابیس: تومان.</span></footer>
+</main>
+<div class="drawer-backdrop" id="backdrop" hidden></div><aside class="drawer" id="drawer" aria-label="جزئیات پروژه" hidden><button class="close" id="close-drawer" aria-label="بستن">×</button><div id="drawer-body"></div></aside>
+<div id="toast" role="status"></div><div id="tooltip" class="tooltip" hidden></div>
+<script src="data.js"></script><script src="app.js"></script>
+</body></html>
+

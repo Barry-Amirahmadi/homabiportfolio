@@ -1,0 +1,31 @@
+{
+  "passed": true,
+  "tests": {
+    "initial": true,
+    "finite": true,
+    "cash_reconciles": true,
+    "projects": true,
+    "cash": true,
+    "procurement": true,
+    "customers": true,
+    "people": true,
+    "decisions": true,
+    "quality": true,
+    "all_period_reconciliation": true,
+    "group_partition": true,
+    "fx_display": true,
+    "scenario_reacts": true,
+    "drilldown": true,
+    "drawer_closes": true,
+    "desktop_no_overflow": true,
+    "mobile_no_overflow": true,
+    "no_js_errors": true
+  },
+  "errors": [],
+  "totals": {
+    "rev": 64879216898302,
+    "cost": 52813549309459,
+    "cash": 22270397120231,
+    "count": 60
+  }
+}
