@@ -2,7 +2,8 @@
 const D=window.HOMA_DATA, BN=1e9, $=s=>document.querySelector(s), sum=(a,k)=>a.reduce((s,x)=>s+(typeof k==='function'?k(x):x[k]||0),0);
 const fa=(n,d=0)=>Number(n||0).toLocaleString('fa-IR',{maximumFractionDigits:d,minimumFractionDigits:d});
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const state={page:location.hash.slice(1)||'overview',year:'1404',group:'all',unit:'bn',fx:90000,collect:20,save:3,inflation:5};
+const FX_REFERENCE=200000,FX_MIN=50000,FX_MAX=500000;
+const state={page:location.hash.slice(1)||'overview',year:'1404',group:'all',unit:'irr',fx:FX_REFERENCE,collect:0,save:0,inflation:0,adjustableRevenue:0};
 const routeTrail=[state.page];
 const metricDetails=window.HOMA_METRICS;
 const pages={overview:['نمای کلان هلدینگ','EXECUTIVE OVERVIEW','پایش رشد و تبدیل آن به ارزش.'],projects:['سلامت سبد پروژه‌ها','PORTFOLIO PERFORMANCE','رشد، زمان و هزینه؛ در یک قاب تصمیم.'],cash:['نقدینگی و سرمایه در گردش','CASH & WORKING CAPITAL','درآمد زمانی نقدینگی می‌شود که وصول شود.'],procurement:['خرید و زنجیرهٔ تأمین','PROCUREMENT INTELLIGENCE','کنترل هزینه از اولین سفارش آغاز می‌شود.'],customers:['کارفرمایان و توسعه بازار','CUSTOMER & GROWTH','ارزش قرارداد، کیفیت وصول و فرصت‌های آینده.'],people:['منابع انسانی و کیفیت اجرا','PEOPLE & DELIVERY','هزینهٔ نیروی انسانی در کنار تجربهٔ کارفرما.'],decisions:['آزمایشگاه تصمیم','DECISION LAB','با تغییر فرض‌ها، اثر هر تصمیم پیش از اجرا برآورد می‌شود.'],quality:['اعتماد به داده','DATA TRUST & LINEAGE','هر شاخص، یک تعریف روشن و یک مسیر قابل ردیابی.']};
@@ -10,9 +11,20 @@ const icons=['<rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" 
 $('#nav').innerHTML=Object.keys(pages).map((k,i)=>`<a href="#${k}" data-page="${k}"><svg viewBox="0 0 24 24">${icons[i]}</svg>${pages[k][0]}</a>`).join('');
 [...new Set(D.companies.map(x=>x.group_name))].forEach(x=>$('#group').insertAdjacentHTML('beforeend',`<option>${x}</option>`));
 const projectMap=Object.fromEntries(D.projects.map(x=>[x.project_id,x])), customerMap=Object.fromEntries(D.customers.map(x=>[x.customer_id,x])),supplierMap=Object.fromEntries(D.suppliers.map(x=>[x.supplier_id,x]));
-const divisor=()=>state.unit==='bn'?BN:state.unit==='hem'?1e12:state.fx*1e6;
-const unit=()=>state.unit==='bn'?'میلیارد تومان':state.unit==='hem'?'همت':'میلیون دلار فرضی';
-const money=(n,d)=>fa(n/divisor(),d??(state.unit==='bn'?0:2));
+const divisor=()=>state.unit==='irr'?BN/10:state.unit==='hem'?1e12:BN;
+const unit=()=>state.unit==='irr'?'میلیارد ریال':state.unit==='hem'?'همت':'میلیارد تومان';
+const money=(n,d)=>fa(n/divisor(),d??(state.unit==='hem'?2:0));
+function syncFxControls(){
+ $('#fx').value=state.fx;
+ $('#fx-slider').value=state.fx;
+ $('#fx-current').textContent=`هر دلار = ${fa(state.fx)} تومان`;
+ $('#fx-slider').setAttribute('aria-valuetext',`${fa(state.fx)} تومان برای هر دلار`);
+ $('#unit').value=state.unit;
+}
+function renderFxImpact(c){
+ const fx=forecast(c);
+ $('#fx-impact').innerHTML=`<div><small>تغییر هزینهٔ مصالح وارداتی آینده</small><strong>${money(fx.importedCostDelta)} ${unit()}</strong></div><div><small>اثر مستقیم دلار بر سود آینده</small><strong>${money(fx.fxProfitDelta)} ${unit()}</strong></div><a href="#decisions">فرض‌ها و جزئیات سناریو ←</a>`;
+}
 const percent=(n,d=1)=>fa(n*100,d)+'٪';
 function context(){
  const projects=D.projects.filter(p=>state.group==='all'||p.group_name===state.group),ids=new Set(projects.map(p=>p.project_id));
@@ -67,19 +79,31 @@ function scatter(ps){
 function forecast(c){
  const last=c.all.filter(x=>x.period_id>=34),overdue=sum(c.ar.filter(x=>x.overdue_days>0),'balance_toman'),ap=sum(c.ap,'balance_toman');
  const arExpected=sum(c.ar,x=>x.balance_toman*(x.overdue_days>180?.25:x.overdue_days>90?.45:x.overdue_days>0?.7:.88));
- const qcost=sum(last,'cost_toman'),qrev=sum(last,'revenue_toman'),material=sum(D.costs.filter(x=>c.ids.has(x.project_id)&&x.period_id>=34&&x.category==='materials'),'amount_toman');
+ const qcost=sum(last,'cost_toman'),qrev=sum(last,'revenue_toman');
+ const materialRows=D.costs.filter(x=>c.ids.has(x.project_id)&&x.period_id>=34&&x.category==='materials');
+ const material=sum(materialRows,'amount_toman');
+ const importedMaterial=sum(materialRows,x=>x.amount_toman*(projectMap[x.project_id].import_share||0));
+ const domesticMaterial=material-importedMaterial;
+ const fxChange=state.fx/FX_REFERENCE-1;
+ const importedCostDelta=importedMaterial*fxChange;
+ const domesticCostDelta=domesticMaterial*state.inflation/100;
+ const revenueDelta=qrev*state.adjustableRevenue/100*fxChange;
+ const adjustedMaterial=material+importedCostDelta+domesticCostDelta;
+ const savings=adjustedMaterial*state.save/100;
+ const fxProfitDelta=revenueDelta-importedCostDelta;
  const base=[c.cash],scenario=[c.cash],floor=c.cash*.30;
  const uncollectedOverdue=sum(c.ar.filter(x=>x.overdue_days>0),x=>x.balance_toman*(1-(x.overdue_days>180?.25:x.overdue_days>90?.45:.7)));
  const grossRecovery=Math.min(overdue*state.collect/100,uncollectedOverdue);
  const recover=grossRecovery*.99; // Capped to balances not already expected in the baseline; 1% incentive.
- const savings=material*state.save/100,inflation=material*state.inflation/100;
+ const revenueCashDelta=revenueDelta*.92*.35;
+ const costCashDelta=(importedCostDelta+domesticCostDelta-savings)*.74;
  for(let i=0;i<13;i++){
   const inflow=arExpected/13+qrev*.92*.35/13;
   const outflow=ap/13+qcost*.74/13;
   base.push(base.at(-1)+inflow-outflow);
-  scenario.push(scenario.at(-1)+inflow-outflow+(i<4?recover/4:0)+(savings-inflation)*.74/13);
+  scenario.push(scenario.at(-1)+inflow-outflow+(i<4?recover/4:0)+(revenueCashDelta-costCashDelta)/13);
  }
- return {base,scenario,floor,recover,savings,inflation,overdue,material,arExpected,qcost,ap,grossRecovery,uncollectedOverdue,netProfit:savings-inflation-grossRecovery*.01};
+ return {base,scenario,floor,recover,savings,overdue,material,importedMaterial,domesticMaterial,importedCostDelta,domesticCostDelta,revenueDelta,fxProfitDelta,fxChange,arExpected,qcost,qrev,ap,grossRecovery,uncollectedOverdue,netProfit:revenueDelta-importedCostDelta-domesticCostDelta+savings-grossRecovery*.01};
 }
 function overview(c){
  const overdue=sum(c.ar.filter(x=>x.overdue_days>0),'balance_toman'),risky=c.projects.filter(risk),delta=c.prevRevenue?(c.revenue/c.prevRevenue-1):null;
@@ -125,16 +149,19 @@ function people(c){
 }
 function decisions(c){
  const f=forecast(c),worst=[...c.projects].sort((a,b)=>riskRank(b)-riskRank(a))[0];
- const controls=`<div class="control"><label>وصول افزوده از مطالبات معوق<strong id="collect-label">${fa(state.collect)}٪</strong></label><input type="range" id="collect" min="0" max="40" value="${state.collect}"><p>وصول طی ۴ هفته؛ با هزینهٔ تشویقی ۱٪. ماندهٔ مطالبات کم می‌شود، درآمد افزایش نمی‌یابد.</p></div><div class="control"><label>کاهش قیمت خرید آتی<strong id="save-label">${fa(state.save)}٪</strong></label><input type="range" id="save" min="0" max="8" step=".5" value="${state.save}"><p>صرفه‌جویی بر خرید فرضی سه ماه آینده، نه هزینه‌های گذشته.</p></div><div class="control"><label>شوک افزودهٔ قیمت مصالح<strong id="inflation-label">${fa(state.inflation)}٪</strong></label><input type="range" id="inflation" min="0" max="25" value="${state.inflation}"><p>تنش در قیمت آینده؛ یک فرض حساسیت‌سنجی و مستقل از نرخ تبدیل نمایشی دلار.</p></div><button class="export-btn" id="reset-scenario">بازگشت به فرض‌های اولیه</button>`;
- return `<div class="strip glass"><strong>فرض → اثر → اقدام</strong><p>سناریوها برای مقایسه‌اند. اعداد خروجی پیش‌بینی قطعی یا نتیجهٔ تجربه‌شده نیستند.</p></div><div class="scenario-grid">${panel('اهرم‌های تصمیم','دامنه‌ها برای آزمایش مدیریتی تعریف شده‌اند',controls)}${panel('اثر بر نقدینگی و هزینه','همهٔ مانده‌ها تا تاریخ برش؛ افق مدل ۱۳ هفته',`<div id="scenario-output">${scenarioOutput(c)}</div>`)}</div>
+ const materialByProject={};D.costs.forEach(x=>{if(c.ids.has(x.project_id)&&x.period_id>=34&&x.category==='materials')materialByProject[x.project_id]=(materialByProject[x.project_id]||0)+x.amount_toman});
+ const fxExposure=c.projects.map(p=>({name:p.name,value:(materialByProject[p.project_id]||0)*(p.import_share||0),note:percent(p.import_share||0)+' سهم فرضی واردات'})).sort((a,b)=>b.value-a.value).slice(0,6);
+ const controls=`<div class="control"><label>سهم درآمد آتی با بند تعدیل ارزی<strong id="adjustableRevenue-label">${fa(state.adjustableRevenue)}٪</strong></label><input type="range" id="adjustableRevenue" min="0" max="100" step="5" value="${state.adjustableRevenue}"><p>پیش‌فرض صفر است؛ در دادهٔ فرضی بند تعدیل قرارداد ثبت نشده و بدون مدرک، درآمد افزایش داده نمی‌شود.</p></div><div class="control"><label>شوک مستقل قیمت مصالح داخلی<strong id="inflation-label">${fa(state.inflation)}٪</strong></label><input type="range" id="inflation" min="0" max="25" value="${state.inflation}"><p>فقط مصالح غیر وارداتی آینده؛ مستقل از حرکت نرخ دلار و بدون اثر بر گذشته.</p></div><div class="control"><label>وصول افزوده از مطالبات معوق<strong id="collect-label">${fa(state.collect)}٪</strong></label><input type="range" id="collect" min="0" max="40" value="${state.collect}"><p>وصول طی ۴ هفته؛ با هزینهٔ تشویقی ۱٪. اصل مطالبات وصول‌شده سود جدید نیست.</p></div><div class="control"><label>کاهش قیمت خرید آتی<strong id="save-label">${fa(state.save)}٪</strong></label><input type="range" id="save" min="0" max="8" step=".5" value="${state.save}"><p>صرفه‌جویی فقط بر خرید مصالح آینده محاسبه می‌شود.</p></div><button class="export-btn" id="reset-scenario">بازگشت به فرض‌های اولیه</button>`;
+ return `<div class="strip glass"><strong>فرض → اثر → اقدام</strong><p>سناریوها برای مقایسه‌اند. اعداد خروجی پیش‌بینی قطعی یا نتیجهٔ تجربه‌شده نیستند.</p></div><div class="scenario-grid">${panel('اهرم‌های تصمیم','دامنه‌ها برای آزمایش مدیریتی تعریف شده‌اند',controls)}${panel('اثر بر نقدینگی و هزینه','مانده‌های گذشته ثابت؛ افق مدل ۱۳ هفته',`<div id="scenario-output">${scenarioOutput(c)}</div>`)}</div>
+ ${panel('پروژه‌های حساس به نرخ ارز','هزینهٔ مصالح سه ماه اخیر × سهم فرضی واردات؛ مبنای برآورد آینده · '+unit(),bars(fxExposure),'FX EXPOSURE')}
  <div class="decision-card glass"><div class="rank">01</div><div><h3>برنامهٔ وصول با تمرکز بر مانده‌های بزرگ</h3><p>ابتدا اصالت مطالبات، اختلاف صورت‌وضعیت و توان پرداخت کارفرما بررسی شود. مالک هر پرونده و تاریخ تعهد وصول ثبت شود؛ موفقیت با کاهش ماندهٔ سررسیدگذشته سنجیده شود.</p></div><div class="owner">مالک: مدیر مالی + بازرگانی<br>افق اقدام: ۳۰ روز<br>شاخص: ماندهٔ معوق و وصول</div></div>
  <div class="decision-card glass"><div class="rank">02</div><div><h3>بازبرآورد هزینهٔ تکمیل پروژه‌های پرریسک</h3><p>${worst.name} در اولویت بازبینی است: CPI برابر ${fa(worst.cpi,2)} و SPI برابر ${fa(worst.spi,2)}. گزارش مهندسیِ مسیر بحرانی، تعهدات و کار باقی‌مانده پیش از تزریق بودجه آماده شود.</p></div><div class="owner">مالک: PMO + مدیر پروژه<br>افق اقدام: ۱۴ روز<br>شاخص: EAC و برنامهٔ جبرانی</div></div>
  <div class="decision-card glass"><div class="rank">03</div><div><h3>مذاکرهٔ خرید و انتقال موجودی بین پروژه‌ها</h3><p>مقایسهٔ تأمین‌کنندگان در هر گروه مصالح، بررسی کیفیت و زمان تحویل، سپس مذاکرهٔ آزمایشی. انتقال موجودی فقط پس از تطبیق مشخصات فنی و نیاز مصوب پروژهٔ مقصد انجام شود.</p></div><div class="owner">مالک: خرید + انبار + فنی<br>افق اقدام: ۴۵ روز<br>شاخص: قیمت هم‌سبد و تأخیر</div></div>`;
 }
-function scenarioOutput(c){const f=forecast(c),delta=f.scenario.at(-1)-f.base.at(-1);return `<div class="scenario-result"><div><small>اثر نقدی ۱۳ هفته · ${unit()}</small><strong style="color:${delta>=0?'var(--teal)':'var(--red)'}">${delta>=0?'+':''}${money(delta)}</strong></div><div><small>اثر بر سود فرضی · ${unit()}</small><strong>${money(f.netProfit)}</strong></div><div><small>کمترین ماندهٔ سناریو · ${unit()}</small><strong>${money(Math.min(...f.scenario))}</strong></div></div>${lineChart(['امروز',...Array.from({length:13},(_,i)=>'هفته '+fa(i+1))],[{name:'پایه',values:f.base,color:'#aa96ad',dashed:true},{name:'سناریوی شما',values:f.scenario,color:'#9b6828'}],{minZero:false,height:245})}<p class="footnote">اثر نقدی = وصول افزوده پس از هزینهٔ تشویقی + ۷۴٪ × (صرفه‌جویی خرید − شوک مصالح). اثر سود شامل اصل مطالبات وصول‌شده نیست. ${money(f.recover)} ${unit()} وصول افزوده فرض شده است.</p>`}
+function scenarioOutput(c){const f=forecast(c),delta=f.scenario.at(-1)-f.base.at(-1);return `<div class="scenario-result"><div><small>تغییر نقد پایان ۱۳ هفته · ${unit()}</small><strong style="color:${delta>=0?'var(--teal)':'var(--red)'}">${money(delta)}</strong></div><div><small>تغییر سود آینده · ${unit()}</small><strong>${money(f.netProfit)}</strong></div><div><small>کمترین ماندهٔ سناریو · ${unit()}</small><strong>${money(Math.min(...f.scenario))}</strong></div></div><div class="scenario-breakdown"><div><span>تعدیل درآمد آتیِ مجاز</span><strong>${money(f.revenueDelta)}</strong></div><div><span>تغییر هزینهٔ مصالح وارداتی</span><strong>${money(f.importedCostDelta)}</strong></div><div><span>شوک مصالح داخلی</span><strong>${money(f.domesticCostDelta)}</strong></div><div><span>صرفه‌جویی خرید آینده</span><strong>${money(f.savings)}</strong></div><div><span>وصول افزوده؛ فقط اثر نقدی</span><strong>${money(f.recover)}</strong></div></div>${lineChart(['امروز',...Array.from({length:13},(_,i)=>'هفته '+fa(i+1))],[{name:'پایه',values:f.base,color:'#aa96ad',dashed:true},{name:'سناریوی شما',values:f.scenario,color:'#9b6828'}],{minZero:false,height:245})}<p class="footnote">سهم واردات هر پروژه در دادهٔ ساختگی ثبت شده است؛ فقط همان بخش از هزینهٔ مصالح سه ماه اخیر با نسبت نرخ دلار تغییر می‌کند. درآمد آتی فقط به اندازهٔ سهم قابل‌تعدیلِ انتخاب‌شده حساس است. ماندهٔ نقد، مطالبات، بدهی و عملکرد گذشته ثابت می‌مانند. ۳۵٪ از ۹۲٪ تعدیل درآمد و ۷۴٪ تغییر هزینه در نقد ۱۳ هفته اثر می‌گذارد؛ این ضرایب فرض‌های مدل‌اند، نه پیش‌بینی تأییدشده. سود شامل اصل مطالبات وصول‌شده نیست.</p>`}
 function quality(){const q=D.dq,physical=sum(Object.entries(D.rowCounts).filter(([k])=>!['metadata','dq_audit','dq_quarantine'].includes(k)).map(([k,v])=>({n:v})),'n');return `<div class="lineage"><div class="glass"><span class="stage">01 / SOURCE</span><strong>${fa(q.raw_rows)}</strong><span>ردیف خام سفارش خرید</span></div><div class="glass"><span class="stage">02 / VALIDATE</span><strong>${fa(q.duplicate_order+q.missing_project+q.negative_amount+q.invalid_supplier)}</strong><span>تکراری یا قرنطینه‌شده</span></div><div class="glass"><span class="stage">03 / WAREHOUSE</span><strong>${fa(q.accepted_orders)}</strong><span>سفارش یکتای معتبر</span></div><div class="glass"><span class="stage">04 / DECISION</span><strong>۸ نمای تحلیلی</strong><span>شاخص‌های مشترک و قابل ردیابی</span></div></div>
  <div class="grid-equal">${panel('کیفیت، با مدرک','کنترل‌های ثبت‌شده در qa/data-validation.json',`<div class="quality-number">۱۵ / ۱۵</div><div class="sub">کنترل اصلی داده با موفقیت انجام شده</div><div class="callout">تطبیق هزینهٔ پروژه با ریز هزینه‌ها، حقوق با ریز پرداخت کارکنان، مصرف مصالح با موجودی، دریافتی با رویدادهای نقدی و نبود کلید خارجی نامعتبر.</div><div class="stat-pair"><div><strong>${fa(physical)}</strong><span>رکورد در جداول عملیاتی و تحلیلی</span></div><div><strong>${fa(D.rowCounts.projects)}</strong><span>پروژهٔ ساخت‌وساز</span></div></div>`)}${panel('گزارش پاک‌سازی','هیچ ردیف نامعتبر بدون ثبت دلیل حذف نشده است',`<div class="table-wrap"><table><thead><tr><th>مسئله</th><th>تعداد</th><th>اقدام</th></tr></thead><tbody>${[['سفارش تکراری',q.duplicate_order,'حذف تکرار'],['شناسهٔ پروژهٔ خالی',q.missing_project,'قرنطینه'],['مبلغ منفی نامعتبر',q.negative_amount,'قرنطینه'],['تأمین‌کنندهٔ نامعتبر',q.invalid_supplier,'قرنطینه'],['مبلغ ریالی',q.irr_to_toman,'تبدیل به تومان'],['قالب متفاوت تاریخ',q.date_standardized,'استانداردسازی']].map(x=>`<tr><td>${x[0]}</td><td>${fa(x[1])}</td><td>${pill(x[2])}</td></tr>`).join('')}</tbody></table></div>`)}</div>
- ${panel('تعریف و دامنهٔ شاخص‌ها','شفافیت فرض‌ها، بخشی از نمونه‌کار است',`<div class="table-wrap"><table><thead><tr><th>شاخص</th><th>تعریف</th><th>محدودیت</th></tr></thead><tbody><tr><td>درآمد شناسایی‌شده</td><td>ارزش قرارداد × افزایش پیشرفت واقعی</td><td>مدل مدیریتی ساده؛ قواعد رسمی حسابداری اعمال نشده</td></tr><tr><td>سود پروژه</td><td>درآمد منهای هزینهٔ مستقیم پروژه</td><td>مالیات، هزینهٔ تأمین مالی و سربار مرکزی مدل نشده</td></tr><tr><td>CPI / SPI</td><td>EV ÷ AC / EV ÷ PV</td><td>ارزش کسب‌شده با بودجه سنجیده می‌شود، نه مبلغ فروش</td></tr><tr><td>ماندهٔ نقد</td><td>افتتاحیه + دریافت − پرداخت − بازاریابی</td><td>ماندهٔ شبیه‌سازی‌شده؛ وام و سود سهام مدل نشده</td></tr><tr><td>دلار</td><td>تومان ÷ نرخ فرضی ÷ یک میلیون</td><td>صرفاً تبدیل نمایشی، بدون نرخ زنده</td></tr><tr><td>همت</td><td>هزار میلیارد تومان</td><td>همهٔ محاسبات پایه بر حسب تومان صحیح</td></tr></tbody></table></div>`)}<p class="footnote">داده‌ها از روابط تعریف‌شدهٔ سناریو تولید شده‌اند؛ کشف علت یا اثبات مهارت روی دادهٔ واقعی محسوب نمی‌شوند. کد تولید، SQL، تعاریف شاخص و کنترل‌های کیفیت همراه پروژه‌اند.</p>`}
+ ${panel('تعریف و دامنهٔ شاخص‌ها','شفافیت فرض‌ها، بخشی از نمونه‌کار است',`<div class="table-wrap"><table><thead><tr><th>شاخص</th><th>تعریف</th><th>محدودیت</th></tr></thead><tbody><tr><td>درآمد شناسایی‌شده</td><td>ارزش قرارداد × افزایش پیشرفت واقعی</td><td>مدل مدیریتی ساده؛ قواعد رسمی حسابداری اعمال نشده</td></tr><tr><td>سود پروژه</td><td>درآمد منهای هزینهٔ مستقیم پروژه</td><td>مالیات، هزینهٔ تأمین مالی و سربار مرکزی مدل نشده</td></tr><tr><td>CPI / SPI</td><td>EV ÷ AC / EV ÷ PV</td><td>ارزش کسب‌شده با بودجه سنجیده می‌شود، نه مبلغ فروش</td></tr><tr><td>ماندهٔ نقد</td><td>افتتاحیه + دریافت − پرداخت − بازاریابی</td><td>ماندهٔ شبیه‌سازی‌شده؛ وام و سود سهام مدل نشده</td></tr><tr><td>سناریوی دلار</td><td>فقط مصالح وارداتی آینده × (نرخ جدید ÷ نرخ مبنا − ۱)</td><td>درآمد آتی فقط با سهم قراردادِ قابل‌تعدیل تغییر می‌کند؛ دادهٔ تاریخی ثابت است</td></tr><tr><td>میلیارد ریال</td><td>مبلغ تومانی × ۱۰ ÷ یک میلیارد</td><td>داده‌های پایه با واحد تومان ذخیره شده‌اند</td></tr><tr><td>همت</td><td>هزار میلیارد تومان</td><td>همهٔ محاسبات پایه بر حسب تومان صحیح</td></tr></tbody></table></div>`)}<p class="footnote">داده‌ها از روابط تعریف‌شدهٔ سناریو تولید شده‌اند؛ کشف علت یا اثبات مهارت روی دادهٔ واقعی محسوب نمی‌شوند. کد تولید، SQL، تعاریف شاخص و کنترل‌های کیفیت همراه پروژه‌اند.</p>`}
 function backDestination(){
  const metricId=state.page.startsWith('metric/')?state.page.slice(7):null;
  if(metricId&&metricDetails.title(metricId)){
@@ -152,6 +179,7 @@ function goBack(){
  location.hash=destination.route;
 }
 function render(){
+ syncFxControls();
  const metricId=state.page.startsWith('metric/')?state.page.slice(7):null;
  const isMetric=metricId&&metricDetails.title(metricId);
  if(!isMetric&&!pages[state.page])state.page='overview';
@@ -161,6 +189,7 @@ function render(){
  document.querySelectorAll('[data-page]').forEach(a=>a.classList.toggle('active',a.dataset.page===activePage));
  const back=backDestination();$('#page-back').title=`بازگشت به ${back.label}`;$('#page-back').setAttribute('aria-label',`بازگشت به ${back.label}`);
  const c=context(),handlers={overview,projects:projectsPage,cash:cashPage,procurement,customers,people,decisions,quality};
+ renderFxImpact(c);
  $('#content').innerHTML=isMetric?metricDetails.render(metricId,c,{D,sum,money,unit,fa,percent,lineChart,bars,panel,scatter,forecast,projectMap,customerMap,supplierMap,pages,returnPage:state.returnPage}):handlers[state.page](c);
  $('#content').classList.remove('page-enter');void $('#content').offsetWidth;$('#content').classList.add('page-enter');
  $('#scope-note').textContent=state.page==='quality'?'کیفیت داده در کل مجموعه · فیلترها بر این صفحه اعمال نمی‌شوند':`عملکرد: ${state.year==='all'?'تمام ۳۶ ماه':'سال '+fa(state.year)} · مانده‌ها و وضعیت پروژه‌ها: ۲۹ اسفند ۱۴۰۴ · ${unit()}`;
@@ -168,8 +197,8 @@ function render(){
 }
 function bindLocal(c){
  $('#project-search')?.addEventListener('input',e=>{$('#projects-table').innerHTML=projectsTable(c.projects.filter(p=>p.name.includes(e.target.value)||p.company_name.includes(e.target.value)))});
- ['collect','save','inflation'].forEach(k=>$('#'+k)?.addEventListener('input',e=>{state[k]=+e.target.value;$('#'+k+'-label').textContent=fa(state[k],k==='save'?1:0)+'٪';$('#scenario-output').innerHTML=scenarioOutput(c)}));
- $('#reset-scenario')?.addEventListener('click',()=>{state.collect=20;state.save=3;state.inflation=5;render()});
+ ['collect','save','inflation','adjustableRevenue'].forEach(k=>$('#'+k)?.addEventListener('input',e=>{state[k]=+e.target.value;$('#'+k+'-label').textContent=fa(state[k],k==='save'?1:0)+'٪';$('#scenario-output').innerHTML=scenarioOutput(c);renderFxImpact(c)}));
+ $('#reset-scenario')?.addEventListener('click',()=>{state.fx=FX_REFERENCE;state.collect=0;state.save=0;state.inflation=0;state.adjustableRevenue=0;render()});
 }
 function detail(id){const p=projectMap[id];if(!p)return;const ms=D.monthly.filter(x=>x.project_id===id&&x.period_id>24),ar=sum(D.receivables.filter(x=>x.project_id===id),'balance_toman');$('#drawer-body').innerHTML=`<div class="eyebrow">PROJECT / ${String(id).padStart(3,'0')}</div><h2>${p.name}</h2><p>${p.company_name} · ${p.location}<br>${p.type} · همهٔ مانده‌ها در تاریخ برش داده</p><div class="kpi-grid">${kpi('ارزش قرارداد',money(p.contract_toman),unit())}${kpi('پیشرفت واقعی',percent(p.progress),'',`برنامه: ${percent(p.planned_progress)}`)}${kpi('کارایی هزینه',fa(p.cpi,2),'CPI',p.cpi<1?'بالاتر از هزینهٔ بودجه‌ای':'در محدودهٔ بودجه',p.cpi<1?'warning':'positive')}${kpi('مطالبات باز',money(ar),unit(),'','neutral','↗',false)}</div>${panel('درآمد و هزینهٔ ۱۲ ماه اخیر',unit(),lineChart(D.periods.slice(24).map(x=>x.label.split(' ')[0]),[{name:'درآمد',values:ms.map(x=>x.revenue_toman),color:'#833ca3'},{name:'هزینه',values:ms.map(x=>x.cost_toman),color:'#d79d4b'}]))}<div class="callout">ارزش کسب‌شده: ${money(p.ev_toman)} ${unit()}<br>هزینهٔ تجمعی: ${money(p.cost_toman)} ${unit()}<br>پیش‌بینی هزینهٔ تکمیل: ${money(p.progress>=1?p.cost_toman:p.budget_toman/p.cpi)} ${unit()}<br>فروض EAC: تداوم کارایی هزینهٔ فعلی.</div>`;$('#backdrop').hidden=false;$('#drawer').hidden=false;$('#close-drawer').focus()}
 function closeDetail(){$('#backdrop').hidden=true;$('#drawer').hidden=true}
@@ -179,10 +208,19 @@ document.addEventListener('pointermove',e=>{const tip=e.target.closest('[data-ti
 window.addEventListener('hashchange',()=>{const next=location.hash.slice(1)||'overview';if(routeTrail.at(-2)===next)routeTrail.pop();else if(routeTrail.at(-1)!==next)routeTrail.push(next);state.page=next;render();window.scrollTo(0,0)});
 $('#page-back').addEventListener('click',goBack);
 for(const [id,key]of [['period','year'],['group','group'],['unit','unit']])$('#'+id).addEventListener('change',e=>{state[key]=e.target.value;render()});
-$('#fx').addEventListener('change',e=>{state.fx=Math.min(1000000,Math.max(1000,Number(e.target.value)||90000));e.target.value=state.fx;render()});
+let fxRenderFrame=0;
+function setFx(value){
+ state.fx=Math.round(Math.min(FX_MAX,Math.max(FX_MIN,value)));
+ syncFxControls();
+ cancelAnimationFrame(fxRenderFrame);
+ fxRenderFrame=requestAnimationFrame(()=>{fxRenderFrame=0;render()});
+}
+$('#fx-slider').addEventListener('input',e=>setFx(Number(e.target.value)));
+$('#fx').addEventListener('input',e=>{const value=Number(e.target.value);if(e.target.value&&Number.isFinite(value)&&value>=FX_MIN&&value<=FX_MAX)setFx(value)});
+$('#fx').addEventListener('change',e=>setFx(Number(e.target.value)||state.fx));
 $('#print').onclick=()=>window.print();
 $('#export').onclick=()=>{const c=context(),keys=['project_id','period_id','revenue_toman','cost_toman','ev_toman','pv_toman','receipts_toman','payments_toman','orders'];const csv='\ufeff'+keys.join(',')+'\r\n'+c.m.map(x=>keys.map(k=>x[k]).join(',')).join('\r\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='homa-filtered-monthly-toman.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);toast('دادهٔ فیلترشده با واحد پایهٔ تومان ذخیره شد.')};
 function toast(s){$('#toast').textContent=s;$('#toast').classList.add('show');setTimeout(()=>$('#toast').classList.remove('show'),3000)}
 // Deterministic, inspectable hooks for automated QA and the OpenMontage showcase.
-window.Homa={state,context,forecast,render,navigate:p=>{state.page=p;render()},setFilters:v=>{Object.assign(state,v);for(const[id,k]of [['period','year'],['group','group'],['unit','unit'],['fx','fx']])$('#'+id).value=state[k];render()},detail,closeDetail};
+window.Homa={state,context,forecast,render,navigate:p=>{state.page=p;render()},setFilters:v=>{Object.assign(state,v);for(const[id,k]of [['period','year'],['group']])$('#'+id).value=state[k];render()},detail,closeDetail};
 render();
