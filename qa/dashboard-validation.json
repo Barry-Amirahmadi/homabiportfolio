@@ -3,6 +3,8 @@
   "tests": {
     "initial": true,
     "finite": true,
+    "project_rename": true,
+    "project_search": true,
     "cash_reconciles": true,
     "projects": true,
     "cash": true,
