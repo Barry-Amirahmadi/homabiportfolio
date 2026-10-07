@@ -205,8 +205,7 @@ window.HOMA_METRICS = (() => {
     }
     const sourceTitle = h.pages[origin][0];
     const viz = html => `<div class="metric-viz">${html}</div>${html.includes('class="chart"') ? '<p class="metric-scroll-hint">برای دیدن همهٔ ماه‌ها، نمودار افقی جابه‌جا شود.</p>' : ''}`;
-    return `<a class="metric-back" href="#${origin}">→ بازگشت به ${sourceTitle}</a>
-      <section class="metric-lead glass"><div><span class="eyebrow">METRIC DETAIL / ${id.toUpperCase()}</span><h2>${heading}</h2><p>${explanation}</p></div><div class="metric-lead-value"><strong>${main.value}</strong><span>${main.suffix}</span></div></section>
+    return `<section class="metric-lead glass"><div><span class="eyebrow">METRIC DETAIL / ${id.toUpperCase()}</span><h2>${heading}</h2><p>${explanation}</p></div><div class="metric-lead-value"><strong>${main.value}</strong><span>${main.suffix}</span></div></section>
       <div class="grid-equal metric-charts">${panel(first[0], 'بر اساس فیلترهای انتخاب‌شده', viz(first[1]))}${panel(second[0], 'همان دامنهٔ داده و واحد نمایش', viz(second[1]))}</div>
       <section class="metric-method glass"><div><h3>روش محاسبه</h3><p>${formula}</p></div><div><h3>نکتهٔ تفسیر</h3><p>${caveat}</p></div><a href="#${origin}">نمای ${sourceTitle} ←</a></section>`;
   }

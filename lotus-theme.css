@@ -85,7 +85,12 @@ tbody tr[data-project]:hover { background: #f2e9f577; }
 .kpi-link:hover, .kpi-link:focus-visible { transform: translateY(-3px); border-color: #b994c5; box-shadow: 0 18px 40px #4a28501f; }
 .kpi-link:active { transform: translateY(0); }
 .kpi-open { display: block; margin-top: 11px; color: #763894; font-size: 10px; font-weight: 600; }
-.metric-back { display: inline-flex; align-items: center; min-height: 42px; margin: 0 0 14px; color: #763894; font-size: 12px; font-weight: 600; }
+.page-heading > div:first-child { min-width: 0; }
+.heading-side { display: flex; align-items: center; gap: 18px; }
+.page-back { display: inline-flex; align-items: center; gap: 9px; min-height: 42px; padding: 5px 8px 5px 14px; border: 1px solid #dfd7d1; border-radius: 12px; background: linear-gradient(115deg, #fffaf5, #f1efed); color: #754d31; font-size: 11px; font-weight: 700; white-space: nowrap; box-shadow: 0 6px 16px #513d3412; }
+.page-back-icon { display: grid; place-items: center; width: 29px; height: 29px; border-radius: 8px; background: #df7b2d; color: #fff; font-size: 18px; line-height: 1; }
+.page-back:hover, .page-back:focus-visible { background: #fff1e5; border-color: #df7b2d; box-shadow: 0 8px 22px #bd69331f; }
+.page-back:active { transform: translateY(1px); }
 .metric-lead { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 27px 30px; margin-bottom: 20px; background: linear-gradient(115deg, #2a1c31, #43284c); color: #fff; border-color: #d79d4b70; }
 .metric-lead .eyebrow { color: #dcb87d; }
 .metric-lead h2 { font-size: 23px; margin: 7px 0; }
@@ -102,6 +107,10 @@ tbody tr[data-project]:hover { background: #f2e9f577; }
 .metric-method a { font-size: 11px; color: #763894; white-space: nowrap; }
 @media(max-width:800px) {
   .sidebar { background: #fcf8f4; }
+  .page-heading { gap: 12px; align-items: flex-start; }
+  .heading-side { gap: 0; }
+  .page-back { min-height: 40px; padding: 5px 7px 5px 10px; font-size: 10px; }
+  .page-back-icon { width: 27px; height: 27px; }
   .kpi-link { min-height: 167px; }
   .metric-lead { display: block; padding: 22px; }
   .metric-lead h2 { font-size: 20px; }
