@@ -17,7 +17,8 @@ const money=(n,d)=>fa(n/divisor(),d??(state.unit==='hem'?2:0));
 function syncFxControls(){
  $('#fx').value=state.fx;
  $('#fx-slider').value=state.fx;
- $('#fx-current').textContent=`هر دلار = ${fa(state.fx)} تومان`;
+ $('#fx-slider').style.setProperty('--fx-progress',`${(state.fx-FX_MIN)/(FX_MAX-FX_MIN)*100}%`);
+ $('#fx-current').textContent=`${fa(state.fx)} تومان`;
  $('#fx-slider').setAttribute('aria-valuetext',`${fa(state.fx)} تومان برای هر دلار`);
  $('#unit').value=state.unit;
 }

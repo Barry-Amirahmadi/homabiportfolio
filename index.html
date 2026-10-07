@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="fa" dir="rtl">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>هُما | اتاق تصمیم مدیرعامل</title><link rel="stylesheet" href="style.css"><link rel="stylesheet" href="lotus-theme.css"></head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>هُما | اتاق تصمیم مدیرعامل</title><link rel="stylesheet" href="style.css?v=894843d9fea6"><link rel="stylesheet" href="lotus-theme.css?v=9f93d8ceb748"></head>
 <body>
 <div class="ambient a1"></div><div class="ambient a2"></div>
 <aside class="sidebar">
@@ -19,9 +19,11 @@
   <button class="export-btn" id="export">خروجی داده ↗</button>
  </section>
  <section class="fx-panel glass" aria-label="تغییر نرخ فرضی دلار">
-  <div class="fx-heading"><div><strong>سناریوی نرخ دلار برای ۱۳ هفتهٔ آینده</strong><span>ارقام ثبت‌شدهٔ گذشته ثابت‌اند. فقط هزینهٔ وارداتی آینده و درآمدِ قابل‌تعدیل در سناریو تغییر می‌کنند؛ نرخ مبنا ۲۰۰٬۰۰۰ تومان است.</span></div><label class="fx-entry">تومان برای هر دلار<input id="fx" type="number" value="200000" min="50000" max="500000" step="1000" inputmode="numeric" aria-label="نرخ فرضی دلار به تومان"></label></div>
-  <input id="fx-slider" type="range" min="50000" max="500000" step="1000" value="200000" aria-label="اسلایدر نرخ فرضی دلار به تومان">
-  <div class="fx-scale"><span>۵۰٬۰۰۰ تومان</span><output id="fx-current" for="fx fx-slider">هر دلار = ۲۰۰٬۰۰۰ تومان</output><span>۵۰۰٬۰۰۰ تومان</span></div>
+  <div class="fx-heading">
+   <div class="fx-copy"><span class="fx-kicker">آزمایش سناریو · ۱۳ هفتهٔ آینده</span><strong>اثر تغییر نرخ دلار</strong><p>فقط هزینهٔ مصالح وارداتی آینده و سهم قابل‌تعدیل قراردادها تغییر می‌کند. ارقام تاریخی ثابت‌اند.</p></div>
+   <label class="fx-entry"><span>نرخ فرضی هر دلار <small>تومان</small></span><input id="fx" type="number" value="200000" min="50000" max="500000" step="1000" inputmode="numeric" aria-label="نرخ فرضی دلار به تومان"></label>
+  </div>
+  <div class="fx-control"><input id="fx-slider" type="range" min="50000" max="500000" step="1000" value="200000" aria-label="اسلایدر نرخ فرضی دلار به تومان"><div class="fx-scale"><span>۵۰٬۰۰۰</span><output id="fx-current" for="fx fx-slider">۲۰۰٬۰۰۰ تومان</output><span>۵۰۰٬۰۰۰</span></div></div>
   <div class="fx-impact" id="fx-impact" aria-live="polite"></div>
  </section>
  <div class="scope-note" id="scope-note">عملکرد: دورهٔ انتخابی · مانده‌ها و وضعیت پروژه‌ها: تاریخ برش داده</div>
@@ -30,6 +32,6 @@
 </main>
 <div class="drawer-backdrop" id="backdrop" hidden></div><aside class="drawer" id="drawer" aria-label="جزئیات پروژه" hidden><button class="close" id="close-drawer" aria-label="بستن">×</button><div id="drawer-body"></div></aside>
 <div id="toast" role="status"></div><div id="tooltip" class="tooltip" hidden></div>
-<script src="data.js"></script><script src="metric-details.js"></script><script src="app.js"></script>
+<script src="data.js?v=b91fc79a8179"></script><script src="metric-details.js?v=5f630ad3e2c5"></script><script src="app.js?v=b2385a11cdfe"></script>
 </body></html>
 

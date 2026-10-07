@@ -35,20 +35,29 @@ nav a.active:after { background: #d79d4b; }
 }
 .filterbar label { color: #786f79; }
 .filterbar select, .filterbar input { color: #39243d; }
-.fx-panel { margin-top: 12px; padding: 16px 20px 13px; border-radius: 16px; }
-.fx-heading { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
-.fx-heading strong { display: block; color: var(--ink); font-size: 13px; }
-.fx-heading span { display: block; color: var(--muted); font-size: 10px; margin-top: 3px; }
-.fx-entry { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 10px; white-space: nowrap; }
-.fx-entry input { width: 112px; padding: 7px 9px; border: 1px solid rgba(255, 255, 255, .75); border-radius: 9px; background: rgba(245, 246, 248, .75); color: var(--ink); font-size: 12px; font-weight: 700; text-align: center; direction: ltr; }
+.fx-panel { position: relative; overflow: hidden; margin-top: 14px; padding: 23px 27px 19px; border-radius: 22px; background: linear-gradient(120deg, rgba(229, 231, 236, .88), rgba(242, 239, 244, .78) 55%, rgba(230, 220, 233, .76)); }
+.fx-panel::before { content: ''; position: absolute; inset: 0 auto auto 0; width: 34%; height: 2px; background: linear-gradient(90deg, transparent, #d79d4b, #833ca3); }
+.fx-heading { display: flex; align-items: center; justify-content: space-between; gap: 28px; }
+.fx-copy { min-width: 0; }
+.fx-kicker { display: block; color: #7b448b; font-size: 10px; font-weight: 800; letter-spacing: .02em; }
+.fx-heading strong { display: block; color: var(--ink); font-size: 19px; line-height: 1.4; margin-top: 3px; }
+.fx-copy p { color: #635a67; font-size: 11px; line-height: 1.8; margin: 3px 0 0; }
+.fx-entry { display: grid; gap: 6px; min-width: 176px; color: #625868; font-size: 10px; font-weight: 700; white-space: nowrap; }
+.fx-entry small { color: #8b818d; font-weight: 400; }
+.fx-entry input { width: 100%; box-sizing: border-box; padding: 9px 12px; border: 1px solid rgba(112, 82, 117, .22); border-radius: 11px; background: rgba(255, 255, 255, .7); box-shadow: inset 0 1px 2px rgba(43, 27, 49, .04); color: #36243b; font-family: inherit; font-size: 16px; font-weight: 700; text-align: center; direction: ltr; font-variant-numeric: tabular-nums; }
 .fx-entry input:focus-visible { outline: 2px solid #833ca3; outline-offset: 2px; }
-#fx-slider { display: block; width: 100%; margin: 14px 0 4px; accent-color: #833ca3; direction: ltr; cursor: pointer; }
-.fx-scale { display: flex; align-items: center; justify-content: space-between; gap: 8px; color: var(--muted); font-size: 9px; direction: ltr; }
-.fx-scale output { color: #65317e; font-size: 11px; font-weight: 700; direction: rtl; }
-.fx-impact { display: grid; grid-template-columns: 1fr 1fr auto; align-items: center; gap: 14px; margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(93, 78, 99, .15); }
-.fx-impact small { display: block; color: var(--muted); font-size: 9px; }
-.fx-impact strong { display: block; color: var(--ink); font-size: 13px; }
-.fx-impact a { color: #763894; font-size: 10px; font-weight: 700; white-space: nowrap; }
+.fx-control { margin-top: 22px; }
+#fx-slider { appearance: none; -webkit-appearance: none; display: block; width: 100%; height: 7px; margin: 0; border-radius: 99px; background: linear-gradient(to right, #833ca3 0 var(--fx-progress, 33.33%), rgba(82, 65, 89, .19) var(--fx-progress, 33.33%) 100%); direction: ltr; cursor: pointer; }
+#fx-slider::-webkit-slider-thumb { appearance: none; -webkit-appearance: none; width: 20px; height: 20px; border: 4px solid #fff; border-radius: 50%; background: #833ca3; box-shadow: 0 2px 10px rgba(81, 38, 96, .3); }
+#fx-slider::-moz-range-thumb { width: 13px; height: 13px; border: 4px solid #fff; border-radius: 50%; background: #833ca3; box-shadow: 0 2px 10px rgba(81, 38, 96, .3); }
+.fx-scale { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 13px; color: #867c89; font-size: 10px; direction: ltr; }
+.fx-scale output { padding: 5px 10px; border-radius: 8px; background: rgba(131, 60, 163, .09); color: #65317e; font-size: 11px; font-weight: 800; direction: rtl; }
+.fx-impact { display: grid; grid-template-columns: 1fr 1fr auto; align-items: stretch; gap: 10px; margin-top: 17px; }
+.fx-impact > div { padding: 11px 14px; border: 1px solid rgba(255, 255, 255, .68); border-radius: 12px; background: rgba(255, 255, 255, .42); }
+.fx-impact small { display: block; color: #726878; font-size: 10px; line-height: 1.6; }
+.fx-impact strong { display: block; color: var(--ink); font-size: 16px; line-height: 1.5; margin-top: 3px; }
+.fx-impact a { display: flex; align-items: center; padding: 0 13px; border-radius: 12px; background: rgba(131, 60, 163, .1); color: #673280; font-size: 10px; font-weight: 700; text-decoration: none; white-space: nowrap; }
+.fx-impact a:hover { background: rgba(131, 60, 163, .17); }
 .export-btn { background: #efe4f0; color: #603276; }
 .export-btn:hover { background: #e3d1e9; }
 .scope-note { color: #7c7280; }
@@ -131,16 +140,17 @@ tbody tr[data-project]:hover { background: #f2e9f577; }
 .metric-method a { font-size: 11px; color: #763894; white-space: nowrap; }
 @media(max-width:800px) {
   .sidebar { background: rgba(230, 232, 236, .94); }
-  .fx-panel { padding: 15px; }
-  .fx-heading { align-items: stretch; flex-direction: column; gap: 12px; }
-  .fx-heading span { font-size: 11px; }
-  .fx-entry { justify-content: space-between; font-size: 11px; }
-  .fx-entry input { width: 130px; min-height: 39px; }
-  #fx-slider { margin-top: 19px; min-height: 28px; }
-  .fx-scale { font-size: 10px; }
-  .fx-scale output { font-size: 10px; }
-  .fx-impact { grid-template-columns: 1fr 1fr; gap: 9px; }
-  .fx-impact a { grid-column: 1 / -1; }
+  .fx-panel { padding: 19px 17px; }
+  .fx-heading { align-items: stretch; flex-direction: column; gap: 15px; }
+  .fx-heading strong { font-size: 17px; }
+  .fx-copy p { font-size: 11px; }
+  .fx-entry { grid-template-columns: 1fr 135px; align-items: center; gap: 8px; font-size: 11px; }
+  .fx-entry input { min-height: 42px; }
+  .fx-control { margin-top: 25px; }
+  .fx-impact { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .fx-impact > div { padding: 10px; }
+  .fx-impact strong { font-size: 13px; }
+  .fx-impact a { grid-column: 1 / -1; min-height: 36px; justify-content: center; }
   .page-heading { gap: 12px; align-items: flex-start; }
   .heading-side { gap: 0; }
   .page-back { min-height: 40px; padding: 5px 7px 5px 10px; font-size: 10px; }
