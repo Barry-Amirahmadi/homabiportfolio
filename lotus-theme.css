@@ -50,6 +50,11 @@ nav a.active:after { background: #d79d4b; }
 .rail-arrow { display: grid; flex: 0 0 31px; place-items: center; width: 31px; height: 31px; padding: 0; border: 1px solid #d79d4b; border-radius: 9px; background: rgba(255, 255, 255, .64); color: #65317d; font-size: 15px; line-height: 1; }
 .rail-arrow:hover { background: #fff0df; }
 @keyframes rail-select { from { transform: scale(1.05); } to { transform: scale(1); } }
+@media(min-width:801px) {
+  .rail-row { justify-content: center; }
+  #dashboard-rail-nav { max-width: 1150px; }
+  #dashboard-rail-nav a { min-width: 170px; justify-content: center; }
+}
 @media(prefers-reduced-motion:reduce) { #dashboard-rail-nav a { transition: none; } #dashboard-rail-nav a.active { animation: none; } }
 .fx-panel { position: relative; overflow: hidden; margin-top: 14px; padding: 23px 27px 19px; border-radius: 22px; background: linear-gradient(120deg, rgba(229, 231, 236, .88), rgba(242, 239, 244, .78) 55%, rgba(230, 220, 233, .76)); }
 .fx-panel::before { content: ''; position: absolute; inset: 0 auto auto 0; width: 34%; height: 2px; background: linear-gradient(90deg, transparent, #d79d4b, #833ca3); }
