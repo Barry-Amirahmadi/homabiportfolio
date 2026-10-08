@@ -13,11 +13,26 @@ const navigationHtml=Object.keys(pages).map((k,i)=>`<a href="#${k}" data-page="$
 $('#nav').innerHTML=navigationHtml;
 $('#mobile-nav').innerHTML=navigationHtml;
 $('#dashboard-rail-nav').innerHTML=navigationHtml;
-function moveRailTo(target){$('#dashboard-rail-nav').scrollLeft=target}
+const railNav=$('#dashboard-rail-nav');
+let railDirection=-1,railPauseUntil=Date.now()+900,railLastTick=Date.now(),railPointerDown=false,railHover=false,railFocus=false,railVisible=true;
+function pauseRail(ms=3500){railPauseUntil=Math.max(railPauseUntil,Date.now()+ms)}
+function moveRailTo(target){railNav.scrollLeft=target}
 function centerRail(page){const nav=$('#dashboard-rail-nav'),item=nav.querySelector(`[data-page="${page}"]`);if(!item)return;const a=nav.getBoundingClientRect(),b=item.getBoundingClientRect();moveRailTo(nav.scrollLeft+b.left+b.width/2-a.left-a.width/2)}
-function scrollRail(direction){const nav=$('#dashboard-rail-nav');moveRailTo(nav.scrollLeft+direction*nav.clientWidth*.72)}
+function scrollRail(direction){pauseRail();moveRailTo(railNav.scrollLeft+direction*railNav.clientWidth*.72)}
 $('#rail-prev').addEventListener('click',()=>scrollRail(1));
 $('#rail-next').addEventListener('click',()=>scrollRail(-1));
+railNav.addEventListener('pointerdown',()=>{railPointerDown=true;pauseRail()});
+window.addEventListener('pointerup',()=>{if(railPointerDown){railPointerDown=false;pauseRail()}});
+window.addEventListener('pointercancel',()=>{railPointerDown=false;pauseRail()});
+railNav.addEventListener('touchstart',()=>pauseRail(),{passive:true});
+railNav.addEventListener('wheel',()=>pauseRail(),{passive:true});
+railNav.addEventListener('mouseenter',()=>{railHover=true});
+railNav.addEventListener('mouseleave',()=>{railHover=false;pauseRail(900)});
+railNav.addEventListener('focusin',()=>{railFocus=true});
+railNav.addEventListener('focusout',()=>{railFocus=railNav.contains(document.activeElement);pauseRail(1200)});
+railNav.addEventListener('click',e=>{if(e.target.closest('a'))pauseRail()});
+if('IntersectionObserver'in window)new IntersectionObserver(entries=>{railVisible=entries[0].isIntersecting}).observe($('.dashboard-rail'));
+setInterval(()=>{const now=Date.now(),elapsed=Math.min(100,now-railLastTick);railLastTick=now;if(document.hidden||!railVisible||railPointerDown||railHover||railFocus||now<railPauseUntil||matchMedia('(prefers-reduced-motion: reduce)').matches||railNav.scrollWidth<=railNav.clientWidth+2)return;const min=railNav.clientWidth-railNav.scrollWidth;let next=railNav.scrollLeft+railDirection*elapsed*.03;if(next<=min){next=min;railDirection=1;railPauseUntil=now+900}else if(next>=0){next=0;railDirection=-1;railPauseUntil=now+900}railNav.scrollLeft=next},40);
 [...new Set(D.companies.map(x=>x.group_name))].forEach(x=>$('#group').insertAdjacentHTML('beforeend',`<option>${x}</option>`));
 const projectMap=Object.fromEntries(D.projects.map(x=>[x.project_id,x])), customerMap=Object.fromEntries(D.customers.map(x=>[x.customer_id,x])),supplierMap=Object.fromEntries(D.suppliers.map(x=>[x.supplier_id,x]));
 const divisor=()=>state.unit==='irr'?BN/10:state.unit==='hem'?1e12:BN;
@@ -197,7 +212,7 @@ function render(){
  $('#title').textContent=title;$('#eyebrow').textContent=eyebrow;$('#subtitle').textContent=sub;
  const activePage=isMetric?(pages[state.returnPage]?state.returnPage:metricDetails.sourcePage(metricId)):state.page;
  document.querySelectorAll('[data-page]').forEach(a=>a.classList.toggle('active',a.dataset.page===activePage));
- if(lastRailPage!==activePage){lastRailPage=activePage;requestAnimationFrame(()=>centerRail(activePage))}
+ if(lastRailPage!==activePage){pauseRail(lastRailPage===null?900:3500);lastRailPage=activePage;requestAnimationFrame(()=>centerRail(activePage))}
  $('#fx-panel').hidden=!(state.page==='overview'||state.page==='decisions');
  const back=backDestination();$('#page-back').title=`بازگشت به ${back.label}`;$('#page-back').setAttribute('aria-label',`بازگشت به ${back.label}`);
  const c=context(),handlers={overview,projects:projectsPage,cash:cashPage,procurement,customers,people,decisions,quality};
