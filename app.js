@@ -8,7 +8,9 @@ const routeTrail=[state.page];
 const metricDetails=window.HOMA_METRICS;
 const pages={overview:['نمای کلان هلدینگ','EXECUTIVE OVERVIEW','پایش رشد و تبدیل آن به ارزش.'],projects:['سلامت سبد پروژه‌ها','PORTFOLIO PERFORMANCE','رشد، زمان و هزینه؛ در یک قاب تصمیم.'],cash:['نقدینگی و سرمایه در گردش','CASH & WORKING CAPITAL','درآمد زمانی نقدینگی می‌شود که وصول شود.'],procurement:['خرید و زنجیرهٔ تأمین','PROCUREMENT INTELLIGENCE','کنترل هزینه از اولین سفارش آغاز می‌شود.'],customers:['کارفرمایان و توسعه بازار','CUSTOMER & GROWTH','ارزش قرارداد، کیفیت وصول و فرصت‌های آینده.'],people:['منابع انسانی و کیفیت اجرا','PEOPLE & DELIVERY','هزینهٔ نیروی انسانی در کنار تجربهٔ کارفرما.'],decisions:['آزمایشگاه تصمیم','DECISION LAB','با تغییر فرض‌ها، اثر هر تصمیم پیش از اجرا برآورد می‌شود.'],quality:['اعتماد به داده','DATA TRUST & LINEAGE','هر شاخص، یک تعریف روشن و یک مسیر قابل ردیابی.']};
 const icons=['<rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/>','<path d="M3 21V8l8-5v18M11 10l10-3v14M6 10v1m0 4v1m9-3v1m3-2v1M2 21h20"/>','<path d="M3 7h18v13H3zM3 7l13-4v4M16 12h5v5h-5z"/>','<path d="M3 5h3l3 12h11l2-9H7M10 21h.1M19 21h.1"/>','<circle cx="9" cy="7" r="3"/><path d="M2 20v-3a7 7 0 0114 0v3M16 4a3 3 0 010 6M18 14a5 5 0 014 5"/>','<path d="M3 20h18M6 17V9m6 8V3m6 14v-5"/>','<path d="M9 3h6M10 3v6L4 19a1 1 0 001 2h14a1 1 0 001-2L14 9V3M8 14h8"/>','<path d="M12 2l9 4v7c0 5-9 9-9 9s-9-4-9-9V6zM7 12l3 3 7-7"/>'];
-$('#nav').innerHTML=Object.keys(pages).map((k,i)=>`<a href="#${k}" data-page="${k}"><svg viewBox="0 0 24 24">${icons[i]}</svg>${pages[k][0]}</a>`).join('');
+const navigationHtml=Object.keys(pages).map((k,i)=>`<a href="#${k}" data-page="${k}"><svg viewBox="0 0 24 24">${icons[i]}</svg>${pages[k][0]}</a>`).join('');
+$('#nav').innerHTML=navigationHtml;
+$('#mobile-nav').innerHTML=navigationHtml;
 [...new Set(D.companies.map(x=>x.group_name))].forEach(x=>$('#group').insertAdjacentHTML('beforeend',`<option>${x}</option>`));
 const projectMap=Object.fromEntries(D.projects.map(x=>[x.project_id,x])), customerMap=Object.fromEntries(D.customers.map(x=>[x.customer_id,x])),supplierMap=Object.fromEntries(D.suppliers.map(x=>[x.supplier_id,x]));
 const divisor=()=>state.unit==='irr'?BN/10:state.unit==='hem'?1e12:BN;
@@ -188,6 +190,7 @@ function render(){
  $('#title').textContent=title;$('#eyebrow').textContent=eyebrow;$('#subtitle').textContent=sub;
  const activePage=isMetric?(pages[state.returnPage]?state.returnPage:metricDetails.sourcePage(metricId)):state.page;
  document.querySelectorAll('[data-page]').forEach(a=>a.classList.toggle('active',a.dataset.page===activePage));
+ $('#fx-panel').hidden=!(state.page==='overview'||state.page==='decisions');
  const back=backDestination();$('#page-back').title=`بازگشت به ${back.label}`;$('#page-back').setAttribute('aria-label',`بازگشت به ${back.label}`);
  const c=context(),handlers={overview,projects:projectsPage,cash:cashPage,procurement,customers,people,decisions,quality};
  renderFxImpact(c);
@@ -205,6 +208,12 @@ function detail(id){const p=projectMap[id];if(!p)return;const ms=D.monthly.filte
 function closeDetail(){$('#backdrop').hidden=true;$('#drawer').hidden=true}
 $('#close-drawer').onclick=closeDetail;$('#backdrop').onclick=closeDetail;document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDetail()});
 document.addEventListener('click',e=>{const metric=e.target.closest('[data-metric]');if(metric&&pages[state.page])state.returnPage=state.page;const project=e.target.closest('[data-project]');if(project)detail(+project.dataset.project);const go=e.target.closest('[data-go]');if(go)location.hash=go.dataset.go});
+function setMobileMenu(open){$('#mobile-menu').hidden=!open;$('#mobile-menu-backdrop').hidden=!open;$('#menu-toggle').setAttribute('aria-expanded',String(open));document.body.classList.toggle('mobile-menu-open',open);if(open)$('#menu-close').focus()}
+$('#menu-toggle').addEventListener('click',()=>setMobileMenu(true));
+$('#menu-close').addEventListener('click',()=>{setMobileMenu(false);$('#menu-toggle').focus()});
+$('#mobile-menu-backdrop').addEventListener('click',()=>setMobileMenu(false));
+$('#mobile-nav').addEventListener('click',e=>{if(e.target.closest('a')){setMobileMenu(false);window.scrollTo(0,0)}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#mobile-menu').hidden){setMobileMenu(false);$('#menu-toggle').focus()}});
 document.addEventListener('pointermove',e=>{const tip=e.target.closest('[data-tip]');if(!tip){$('#tooltip').hidden=true;return}const el=$('#tooltip');el.textContent=tip.dataset.tip;el.hidden=false;el.style.left=Math.max(5,Math.min(e.clientX+12,innerWidth-el.offsetWidth-12))+'px';el.style.top=Math.max(5,e.clientY-el.offsetHeight-15)+'px'});
 window.addEventListener('hashchange',()=>{const next=location.hash.slice(1)||'overview';if(routeTrail[routeTrail.length-2]===next)routeTrail.pop();else if(routeTrail[routeTrail.length-1]!==next)routeTrail.push(next);state.page=next;render();window.scrollTo(0,0)});
 $('#page-back').addEventListener('click',goBack);

@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="fa" dir="rtl">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>هُما | اتاق تصمیم مدیرعامل</title><link rel="stylesheet" href="style.css?v=894843d9fea6"><link rel="stylesheet" href="lotus-theme.css?v=0ac6d4d0338f"></head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>هُما | اتاق تصمیم مدیرعامل</title><link rel="stylesheet" href="style.css?v=894843d9fea6"><link rel="stylesheet" href="lotus-theme.css?v=2dfdb5644195"></head>
 <body>
 <div class="ambient a1"></div><div class="ambient a2"></div>
 <aside class="sidebar">
@@ -9,6 +9,9 @@
  <div class="nav-label">نمای مدیریتی</div><nav id="nav"></nav>
  <div class="sidebar-bottom"><span class="mini-orbit">◈</span><strong>از داده تا تصمیم</strong><p>نمونه‌کار BI & BA<br>داده‌های شبیه‌سازی‌شده</p><a href="CASE-STUDY.html" target="_blank">داستان پروژه و روش تحلیل ↗</a></div>
 </aside>
+<div class="mobile-topbar"><a class="mobile-brand" href="#overview"><span class="brand-mark">هـ</span><span>هُما <small>داشبورد مدیریتی</small></span></a><button type="button" class="menu-toggle" id="menu-toggle" aria-label="باز کردن فهرست داشبوردها" aria-controls="mobile-menu" aria-expanded="false"><span></span><span></span><span></span></button></div>
+<div class="mobile-menu-backdrop" id="mobile-menu-backdrop" hidden></div>
+<aside class="mobile-menu" id="mobile-menu" aria-label="فهرست داشبوردها" hidden><div class="mobile-menu-head"><strong>داشبوردهای هُما</strong><button type="button" id="menu-close" aria-label="بستن فهرست">×</button></div><p>صفحهٔ موردنظر را انتخاب کنید</p><nav id="mobile-nav"></nav><a class="mobile-case-link" href="CASE-STUDY.html">داستان پروژه و روش تحلیل ←</a></aside>
 <main>
  <header><div class="breadcrumbs">HOMA / INTELLIGENCE <span>نسخهٔ نمونه‌کار</span></div><div class="header-actions"><span class="live-dot"></span>دادهٔ فرضی، تحلیل قابل بازتولید <button class="icon-btn" id="print" title="چاپ گزارش" aria-label="چاپ گزارش">⎙</button></div></header>
  <section class="page-heading"><div><div id="eyebrow" class="eyebrow">EXECUTIVE OVERVIEW</div><h1 id="title">نمای کلان هلدینگ</h1><p id="subtitle">پایش رشد و تبدیل آن به ارزش.</p></div><div class="heading-side"><button type="button" class="page-back" id="page-back" aria-label="بازگشت"><span class="page-back-icon" aria-hidden="true">→</span><span>بازگشت</span></button><div class="date-badge"><span>تاریخ برش داده</span><strong>۲۹ اسفند ۱۴۰۴</strong></div></div></section>
@@ -18,7 +21,7 @@
   <label>واحد نمایش<select id="unit"><option value="irr" selected>میلیارد ریال</option><option value="bn">میلیارد تومان</option><option value="hem">همت</option></select></label>
   <button class="export-btn" id="export">خروجی داده ↗</button>
  </section>
- <section class="fx-panel glass" aria-label="تغییر نرخ فرضی دلار">
+ <section class="fx-panel glass" id="fx-panel" aria-label="تغییر نرخ فرضی دلار">
   <div class="fx-heading">
    <div class="fx-copy"><span class="fx-kicker">آزمایش سناریو · ۱۳ هفتهٔ آینده</span><strong>اثر تغییر نرخ دلار</strong><p>فقط هزینهٔ مصالح وارداتی آینده و سهم قابل‌تعدیل قراردادها تغییر می‌کند. ارقام تاریخی ثابت‌اند.</p></div>
    <label class="fx-entry"><span>نرخ فرضی هر دلار <small>تومان</small></span><input id="fx" type="number" value="200000" min="50000" max="500000" step="1000" inputmode="numeric" aria-label="نرخ فرضی دلار به تومان"></label>
@@ -33,6 +36,6 @@
 <div class="drawer-backdrop" id="backdrop" hidden></div><aside class="drawer" id="drawer" aria-label="جزئیات پروژه" hidden><button class="close" id="close-drawer" aria-label="بستن">×</button><div id="drawer-body"></div></aside>
 <div id="toast" role="status"></div><div id="tooltip" class="tooltip" hidden></div>
 <script>window.setTimeout(function(){var el=document.getElementById('load-state-message');if(el)el.textContent='بارگذاری بیش از حد معمول طول کشیده است. اتصال را بررسی کنید و «تلاش دوباره» را بزنید.'},12000);window.addEventListener('error',function(e){if(e.target&&e.target.tagName==='SCRIPT'||e.message){var el=document.getElementById('load-state-message');if(el)el.textContent='بارگذاری داشبورد کامل نشد. لطفاً «تلاش دوباره» را بزنید.'}},true);</script>
-<script src="data.js?v=3abb11d0d2f3"></script><script src="metric-details.js?v=a6d31afb1f61"></script><script src="app.js?v=4e5866497d7a"></script>
+<script src="data.js?v=3abb11d0d2f3"></script><script src="metric-details.js?v=a6d31afb1f61"></script><script src="app.js?v=983d6dbad49e"></script>
 </body></html>
 
