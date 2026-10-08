@@ -14,7 +14,7 @@ $('#nav').innerHTML=navigationHtml;
 $('#mobile-nav').innerHTML=navigationHtml;
 $('#dashboard-rail-nav').innerHTML=navigationHtml;
 const railNav=$('#dashboard-rail-nav');
-let railDirection=-1,railPauseUntil=Date.now()+900,railLastTick=Date.now(),railPointerDown=false,railHover=false,railFocus=false,railVisible=true;
+let railDirection=-1,railPauseUntil=Date.now()+900,railLastTick=Date.now(),railPointerDown=false,railFocus=false,railVisible=true;
 function pauseRail(ms=3500){railPauseUntil=Math.max(railPauseUntil,Date.now()+ms)}
 function moveRailTo(target){railNav.scrollLeft=target}
 function centerRail(page){const nav=$('#dashboard-rail-nav'),item=nav.querySelector(`[data-page="${page}"]`);if(!item)return;const a=nav.getBoundingClientRect(),b=item.getBoundingClientRect();moveRailTo(nav.scrollLeft+b.left+b.width/2-a.left-a.width/2)}
@@ -26,13 +26,11 @@ window.addEventListener('pointerup',()=>{if(railPointerDown){railPointerDown=fal
 window.addEventListener('pointercancel',()=>{railPointerDown=false;pauseRail()});
 railNav.addEventListener('touchstart',()=>pauseRail(),{passive:true});
 railNav.addEventListener('wheel',()=>pauseRail(),{passive:true});
-railNav.addEventListener('mouseenter',()=>{railHover=true});
-railNav.addEventListener('mouseleave',()=>{railHover=false;pauseRail(900)});
 railNav.addEventListener('focusin',()=>{railFocus=true});
 railNav.addEventListener('focusout',()=>{railFocus=railNav.contains(document.activeElement);pauseRail(1200)});
 railNav.addEventListener('click',e=>{if(e.target.closest('a'))pauseRail()});
 if('IntersectionObserver'in window)new IntersectionObserver(entries=>{railVisible=entries[0].isIntersecting}).observe($('.dashboard-rail'));
-setInterval(()=>{const now=Date.now(),elapsed=Math.min(100,now-railLastTick);railLastTick=now;if(document.hidden||!railVisible||railPointerDown||railHover||railFocus||now<railPauseUntil||matchMedia('(prefers-reduced-motion: reduce)').matches||railNav.scrollWidth<=railNav.clientWidth+2)return;const min=railNav.clientWidth-railNav.scrollWidth;let next=railNav.scrollLeft+railDirection*elapsed*.03;if(next<=min){next=min;railDirection=1;railPauseUntil=now+900}else if(next>=0){next=0;railDirection=-1;railPauseUntil=now+900}railNav.scrollLeft=next},40);
+setInterval(()=>{const now=Date.now(),elapsed=Math.min(100,now-railLastTick);railLastTick=now;if(document.hidden||!railVisible||railPointerDown||railFocus||now<railPauseUntil||matchMedia('(prefers-reduced-motion: reduce)').matches||railNav.scrollWidth<=railNav.clientWidth+2)return;const min=railNav.clientWidth-railNav.scrollWidth;let next=railNav.scrollLeft+railDirection*elapsed*.03;if(next<=min){next=min;railDirection=1;railPauseUntil=now+900}else if(next>=0){next=0;railDirection=-1;railPauseUntil=now+900}railNav.scrollLeft=next},40);
 [...new Set(D.companies.map(x=>x.group_name))].forEach(x=>$('#group').insertAdjacentHTML('beforeend',`<option>${x}</option>`));
 const projectMap=Object.fromEntries(D.projects.map(x=>[x.project_id,x])), customerMap=Object.fromEntries(D.customers.map(x=>[x.customer_id,x])),supplierMap=Object.fromEntries(D.suppliers.map(x=>[x.supplier_id,x]));
 const divisor=()=>state.unit==='irr'?BN/10:state.unit==='hem'?1e12:BN;
