@@ -5,12 +5,19 @@ const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'
 const FX_REFERENCE=200000,FX_MIN=50000,FX_MAX=500000;
 const state={page:location.hash.slice(1)||'overview',year:'1404',group:'all',unit:'irr',fx:FX_REFERENCE,collect:0,save:0,inflation:0,adjustableRevenue:0};
 const routeTrail=[state.page];
+let lastRailPage=null;
 const metricDetails=window.HOMA_METRICS;
 const pages={overview:['نمای کلان هلدینگ','EXECUTIVE OVERVIEW','پایش رشد و تبدیل آن به ارزش.'],projects:['سلامت سبد پروژه‌ها','PORTFOLIO PERFORMANCE','رشد، زمان و هزینه؛ در یک قاب تصمیم.'],cash:['نقدینگی و سرمایه در گردش','CASH & WORKING CAPITAL','درآمد زمانی نقدینگی می‌شود که وصول شود.'],procurement:['خرید و زنجیرهٔ تأمین','PROCUREMENT INTELLIGENCE','کنترل هزینه از اولین سفارش آغاز می‌شود.'],customers:['کارفرمایان و توسعه بازار','CUSTOMER & GROWTH','ارزش قرارداد، کیفیت وصول و فرصت‌های آینده.'],people:['منابع انسانی و کیفیت اجرا','PEOPLE & DELIVERY','هزینهٔ نیروی انسانی در کنار تجربهٔ کارفرما.'],decisions:['آزمایشگاه تصمیم','DECISION LAB','با تغییر فرض‌ها، اثر هر تصمیم پیش از اجرا برآورد می‌شود.'],quality:['اعتماد به داده','DATA TRUST & LINEAGE','هر شاخص، یک تعریف روشن و یک مسیر قابل ردیابی.']};
 const icons=['<rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/>','<path d="M3 21V8l8-5v18M11 10l10-3v14M6 10v1m0 4v1m9-3v1m3-2v1M2 21h20"/>','<path d="M3 7h18v13H3zM3 7l13-4v4M16 12h5v5h-5z"/>','<path d="M3 5h3l3 12h11l2-9H7M10 21h.1M19 21h.1"/>','<circle cx="9" cy="7" r="3"/><path d="M2 20v-3a7 7 0 0114 0v3M16 4a3 3 0 010 6M18 14a5 5 0 014 5"/>','<path d="M3 20h18M6 17V9m6 8V3m6 14v-5"/>','<path d="M9 3h6M10 3v6L4 19a1 1 0 001 2h14a1 1 0 001-2L14 9V3M8 14h8"/>','<path d="M12 2l9 4v7c0 5-9 9-9 9s-9-4-9-9V6zM7 12l3 3 7-7"/>'];
 const navigationHtml=Object.keys(pages).map((k,i)=>`<a href="#${k}" data-page="${k}"><svg viewBox="0 0 24 24">${icons[i]}</svg>${pages[k][0]}</a>`).join('');
 $('#nav').innerHTML=navigationHtml;
 $('#mobile-nav').innerHTML=navigationHtml;
+$('#dashboard-rail-nav').innerHTML=navigationHtml;
+function moveRailTo(target){$('#dashboard-rail-nav').scrollLeft=target}
+function centerRail(page){const nav=$('#dashboard-rail-nav'),item=nav.querySelector(`[data-page="${page}"]`);if(!item)return;const a=nav.getBoundingClientRect(),b=item.getBoundingClientRect();moveRailTo(nav.scrollLeft+b.left+b.width/2-a.left-a.width/2)}
+function scrollRail(direction){const nav=$('#dashboard-rail-nav');moveRailTo(nav.scrollLeft+direction*nav.clientWidth*.72)}
+$('#rail-prev').addEventListener('click',()=>scrollRail(1));
+$('#rail-next').addEventListener('click',()=>scrollRail(-1));
 [...new Set(D.companies.map(x=>x.group_name))].forEach(x=>$('#group').insertAdjacentHTML('beforeend',`<option>${x}</option>`));
 const projectMap=Object.fromEntries(D.projects.map(x=>[x.project_id,x])), customerMap=Object.fromEntries(D.customers.map(x=>[x.customer_id,x])),supplierMap=Object.fromEntries(D.suppliers.map(x=>[x.supplier_id,x]));
 const divisor=()=>state.unit==='irr'?BN/10:state.unit==='hem'?1e12:BN;
@@ -190,6 +197,7 @@ function render(){
  $('#title').textContent=title;$('#eyebrow').textContent=eyebrow;$('#subtitle').textContent=sub;
  const activePage=isMetric?(pages[state.returnPage]?state.returnPage:metricDetails.sourcePage(metricId)):state.page;
  document.querySelectorAll('[data-page]').forEach(a=>a.classList.toggle('active',a.dataset.page===activePage));
+ if(lastRailPage!==activePage){lastRailPage=activePage;requestAnimationFrame(()=>centerRail(activePage))}
  $('#fx-panel').hidden=!(state.page==='overview'||state.page==='decisions');
  const back=backDestination();$('#page-back').title=`بازگشت به ${back.label}`;$('#page-back').setAttribute('aria-label',`بازگشت به ${back.label}`);
  const c=context(),handlers={overview,projects:projectsPage,cash:cashPage,procurement,customers,people,decisions,quality};
